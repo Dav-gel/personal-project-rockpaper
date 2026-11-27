@@ -1,10 +1,37 @@
 import 'package:flutter/material.dart';
+
+import 'choice.dart';
 import 'game_screen.dart';
 import 'modifier.dart';
- 
-class HomePage extends StatelessWidget {
+
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
- 
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  Map<Choice, int> _choicePercentages = {
+    Choice.rock: 64,
+    Choice.paper: 3,
+    Choice.scissors: 33,
+  };
+
+  Future<void> openModifiers() async {
+    final percentages = await Navigator.push<Map<Choice, int>>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Modifier(initialPercentages: _choicePercentages),
+      ),
+    );
+    if (percentages != null) {
+      setState(() {
+        _choicePercentages = percentages;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -41,10 +68,7 @@ class HomePage extends StatelessWidget {
                 const Text(
                   'Challenge the computer and test your luck!',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white70,
-                  ),
+                  style: TextStyle(fontSize: 18, color: Colors.white70),
                 ),
                 const SizedBox(height: 40),
                 SizedBox(
@@ -54,7 +78,8 @@ class HomePage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const GameScreen(),
+                          builder: (context) =>
+                              GameScreen(choicePercentages: _choicePercentages),
                         ),
                       );
                     },
@@ -78,16 +103,7 @@ class HomePage extends StatelessWidget {
                 SizedBox(
                   width: 300,
                   child: OutlinedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const Modifier(),
-                        ),
-                      );
-                      
-                      // TODO: modifiers хуудас руу шилжих
-                    },
+                    onPressed: openModifiers,
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Colors.white),
                       foregroundColor: Colors.white,
@@ -113,4 +129,3 @@ class HomePage extends StatelessWidget {
     );
   }
 }
- 

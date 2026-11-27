@@ -1,37 +1,45 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
+
 import 'choice.dart';
- 
+
 class GameScreen extends StatefulWidget {
-  const GameScreen({super.key});
- 
+  final Map<Choice, int> choicePercentages;
+
+  const GameScreen({super.key, required this.choicePercentages});
+
   @override
   State<GameScreen> createState() => _GameScreenState();
 }
- 
+
 class _GameScreenState extends State<GameScreen> {
-  final Random _random = Random();
- 
   int playerScore = 0;
   int computerScore = 0;
   int draws = 0;
- 
+
   Choice? playerChoice;
   Choice? computerChoice;
   String resultText = 'Choose your move!';
- 
+
   Choice getRandomChoice() {
-    final values = Choice.values;
-    return values[_random.nextInt(values.length)];
+    var roll = Random().nextInt(100);
+    for (final choice in Choice.values) {
+      roll -= widget.choicePercentages[choice]!;
+      if (roll < 0) {
+        return choice;
+      }
+    }
+    throw StateError('Move percentages must total 100.');
   }
- 
+
   void play(Choice choice) {
     final computer = getRandomChoice();
- 
+
     setState(() {
       playerChoice = choice;
       computerChoice = computer;
- 
+
       if (choice == computer) {
         resultText = "It's a draw!";
         draws++;
@@ -46,7 +54,7 @@ class _GameScreenState extends State<GameScreen> {
       }
     });
   }
- 
+
   void resetGame() {
     setState(() {
       playerScore = 0;
@@ -57,7 +65,7 @@ class _GameScreenState extends State<GameScreen> {
       resultText = 'Choose your move!';
     });
   }
- 
+
   Widget choiceButton(Choice choice) {
     return Expanded(
       child: Padding(
@@ -73,10 +81,7 @@ class _GameScreenState extends State<GameScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                choice.emoji,
-                style: const TextStyle(fontSize: 32),
-              ),
+              Text(choice.emoji, style: const TextStyle(fontSize: 32)),
               const SizedBox(height: 8),
               Text(choice.label),
             ],
@@ -85,7 +90,7 @@ class _GameScreenState extends State<GameScreen> {
       ),
     );
   }
- 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -102,23 +107,29 @@ class _GameScreenState extends State<GameScreen> {
         child: Column(
           children: [
             const SizedBox(height: 20),
- 
+
             Row(
               children: [
                 Expanded(
-                  child: _ScoreCard(title: 'You', value: playerScore.toString()),
+                  child: _ScoreCard(
+                    title: 'You',
+                    value: playerScore.toString(),
+                  ),
                 ),
                 Expanded(
                   child: _ScoreCard(title: 'Draw', value: draws.toString()),
                 ),
                 Expanded(
-                  child: _ScoreCard(title: 'CPU', value: computerScore.toString()),
+                  child: _ScoreCard(
+                    title: 'CPU',
+                    value: computerScore.toString(),
+                  ),
                 ),
               ],
             ),
- 
+
             const SizedBox(height: 30),
- 
+
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -158,9 +169,9 @@ class _GameScreenState extends State<GameScreen> {
                 ],
               ),
             ),
- 
+
             const SizedBox(height: 30),
- 
+
             Row(
               children: [
                 choiceButton(Choice.rock),
@@ -168,9 +179,9 @@ class _GameScreenState extends State<GameScreen> {
                 choiceButton(Choice.scissors),
               ],
             ),
- 
+
             const Spacer(),
- 
+
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
@@ -191,16 +202,13 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 }
- 
+
 class _ScoreCard extends StatelessWidget {
   final String title;
   final String value;
- 
-  const _ScoreCard({
-    required this.title,
-    required this.value,
-  });
- 
+
+  const _ScoreCard({required this.title, required this.value});
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -212,10 +220,7 @@ class _ScoreCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(
-            title,
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
+          Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           Text(
             value,
@@ -226,4 +231,3 @@ class _ScoreCard extends StatelessWidget {
     );
   }
 }
- 

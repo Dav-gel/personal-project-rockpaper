@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
- 
+import 'choice.dart';
+
 class Modifier extends StatefulWidget {
-  const Modifier({super.key});
+  final Map<Choice, int> initialPercentages;
+
+  const Modifier({super.key, required this.initialPercentages});
  
   @override
   State<Modifier> createState() => _ModifierState();
@@ -14,6 +17,53 @@ class _ModifierState extends State<Modifier> {
   // Аль слот сонгогдсон (null = сонгоогүй)
   int? selectedSlot;
  
+  late final Map<Choice, TextEditingController> _percentageControllers;
+  String? _percentageError;
+
+  @override
+  void initState() {
+    super.initState();
+    _percentageControllers = {
+      for (final choice in Choice.values)
+        choice: TextEditingController(
+          text: widget.initialPercentages[choice].toString(),
+        ),
+    };
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _percentageControllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _savePercentages() {
+    final percentages = <Choice, int>{};
+    for (final choice in Choice.values) {
+      final value = int.tryParse(_percentageControllers[choice]!.text);
+      if (value == null || value < 0 || value > 100) {
+        setState(() {
+          _percentageError =
+              'Enter a whole number from 0 to 100 for each move.';
+        });
+        return;
+      }
+      percentages[choice] = value;
+    }
+
+    final total = percentages.values.reduce((sum, value) => sum + value);
+    if (total != 100) {
+      setState(() {
+        _percentageError = 'Percentages must total 100% (currently $total%).';
+      });
+      return;
+    }
+
+    Navigator.pop(context, percentages);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,6 +74,44 @@ class _ModifierState extends State<Modifier> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          const _SectionTitle('Computer move chances'),
+          const SizedBox(height: 4),
+          const Text(
+            'Set the chance of each move. The percentages must add up to 100%.',
+            style: TextStyle(color: Colors.grey),
+          ),
+          const SizedBox(height: 12),
+          for (final choice in Choice.values)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: TextField(
+                controller: _percentageControllers[choice],
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: '${choice.label} (%)',
+                  border: const OutlineInputBorder(),
+                  suffixText: '%',
+                ),
+              ),
+            ),
+          if (_percentageError != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                _percentageError!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: _savePercentages,
+              child: const Text('Save chances'),
+            ),
+          ),
+
+          const SizedBox(height: 28),
+
           // ---------- 1) Modifier байрлуулах хэсэг ----------
           const _SectionTitle('Modifier slots'),
           const SizedBox(height: 4),
